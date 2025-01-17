@@ -1,7 +1,7 @@
 import re
 from torch import device, dtype
-from config import BertConfig, PretrainedConfig
-from utils import *
+from .config import BertConfig, PretrainedConfig
+from ..utils import *
 
 
 class BertPreTrainedModel(nn.Module):
