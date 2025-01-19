@@ -38,29 +38,29 @@ class AdamW(Optimizer):
                 grad = p.grad.data
                 if grad.is_sparse:
                     raise RuntimeError("Adam does not support sparse gradients, please consider SparseAdam instead")
-                print("grad",p.grad.data)
+                # print("grad",p.grad.data)
                 # State should be stored in this dictionary
                 state = self.state[p]
                 # Access hyperparameters from the `group` dictionary
                 alpha = group["lr"]
-                print("hyperparameter is",group)
+                # print("hyperparameter is",group)
                 ###initalize all hyperparameter
                 if 'm' not in state:
                     state['m']=0
-                    print('m is initialized')
+                    # print('m is initialized')
                 if 'n' not in state:
                     state['n']=0
-                    print('n is initialized')
+                    # print('n is initialized')
                 if 't' not in state:
                     state['t']=torch.tensor(0)
-                    print('t is initialized')
+                    # print('t is initialized')
                 state['t']=state['t']+1
-                print("state[t]",state['t'])
+                # print("state[t]",state['t'])
                 # Update first and second moments of the gradients
                 state['m']=group["betas"][0]*state['m']+(1-group["betas"][0])*grad
                 state['n']=group["betas"][1]*state['n']+(1-group["betas"][1])*(grad*grad)
-                print('self.state[n]',state['n'])
-                print('self.state[m]',state['m'])
+                # print('self.state[n]',state['n'])
+                # print('self.state[m]',state['m'])
 
                 if group["correct_bias"]:
                 # Bias correction
