@@ -12,7 +12,7 @@ from .optimizer import AdamW
 from tqdm import tqdm
 
 
-TQDM_DISABLE=True
+TQDM_DISABLE=False
 # fix the random seed
 def seed_everything(seed=11711):
     random.seed(seed)
