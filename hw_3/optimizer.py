@@ -75,7 +75,7 @@ class AdamW(Optimizer):
                 else:
                     p.data=p.data-state['m']*alpha/(torch.sqrt(state['n'])+group["eps"])+group["weight_decay"]*p.data
                     print("we are here!")
-                print("p.data is now",p.data)
+                # print("p.data is now",p.data)
                 # Please note that we are using the "efficient version" given in
                 # https://arxiv.org/abs/1412.6980
                 
