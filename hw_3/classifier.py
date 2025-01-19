@@ -151,16 +151,15 @@ def train(args, model, config):
                                 collate_fn=dev_dataset.collate_fn)
 
     #### Init model
-    # config = {'hidden_dropout_prob': args.hidden_dropout_prob,
-    #           'num_labels': num_labels,
-    #           'hidden_size': 768,
-    #           'data_dir': '.',
-    #           'option': args.option}
+    config = {'hidden_dropout_prob': args.hidden_dropout_prob,
+              'num_labels': num_labels,
+              'hidden_size': 768,
+              'data_dir': '.',
+              'option': args.option}
 
     config = SimpleNamespace(**config)
 
     # initialize the Senetence Classification Model
-    # model = BertSentClassifier(config)
     model = model.to(device)
 
     lr = args.lr
