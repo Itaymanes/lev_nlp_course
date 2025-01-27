@@ -6,11 +6,10 @@ A model for named entity recognition.
 import pdb
 import logging
 
-import tensorflow as tf
-from util import ConfusionMatrix, Progbar, minibatches
-from data_util import get_chunks
-from model import Model
-from defs import LBLS
+from .util import ConfusionMatrix, Progbar, minibatches
+from .data_util import get_chunks
+from .model import Model
+from .defs import LBLS
 
 logger = logging.getLogger("hw3")
 logger.setLevel(logging.DEBUG)

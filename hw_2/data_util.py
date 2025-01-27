@@ -9,8 +9,8 @@ import logging
 from collections import Counter
 
 import numpy as np
-from util import read_conll, one_hot, window_iterator, ConfusionMatrix, load_word_vector_mapping
-from defs import LBLS, NONE, LMAP, NUM, UNK, EMBED_SIZE
+from .util import read_conll, one_hot, window_iterator, ConfusionMatrix, load_word_vector_mapping
+from .defs import LBLS, NONE, LMAP, NUM, UNK, EMBED_SIZE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
