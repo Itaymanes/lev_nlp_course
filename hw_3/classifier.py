@@ -134,7 +134,7 @@ def save_model(model, optimizer, args, config, filepath):
     torch.save(save_info, filepath)
     print(f"save the model to {filepath}")
 
-def train(args, model, config):
+def train(args, model):
     device = torch.device('cuda') if args.use_gpu else torch.device('cpu')
     print(f"DEVICE: {device}")
     #### Load data
