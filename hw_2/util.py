@@ -11,30 +11,35 @@ logger = logging.getLogger("hw2")
 logger.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-def read_conll(fstream):
+def read_conll(file_path):
     """
-    Reads a input stream @fstream (e.g. output of `open(fname, 'r')`) in CoNLL file format.
-    @returns a list of examples [(tokens), (labels)]. @tokens and @labels are lists of string.
+    Reads a CoNLL file from a given file path.
+    Returns a list of examples [(tokens), (labels)].
+    @tokens and @labels are lists of strings.
     """
     ret = []
 
     current_toks, current_lbls = [], []
-    for line in fstream:
-        line = line.strip()
-        if len(line) == 0 or line.startswith("-DOCSTART-"):
-            if len(current_toks) > 0:
-                assert len(current_toks) == len(current_lbls)
-                ret.append((current_toks, current_lbls))
-            current_toks, current_lbls = [], []
-        else:
-            assert "\t" in line, r"Invalid CONLL format; expected a '\t' in {}".format(line)
-            tok, lbl = line.split("\t")
-            current_toks.append(tok)
-            current_lbls.append(lbl)
-    if len(current_toks) > 0:
-        assert len(current_toks) == len(current_lbls)
-        ret.append((current_toks, current_lbls))
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            line = line.strip()
+            if len(line) == 0 or line.startswith("-DOCSTART-"):
+                if len(current_toks) > 0:
+                    assert len(current_toks) == len(current_lbls)
+                    ret.append((current_toks, current_lbls))
+                current_toks, current_lbls = [], []
+            else:
+                assert "\t" in line, f"Invalid CONLL format; expected a '\\t' in {line}"
+                tok, lbl = line.split("\t")
+                current_toks.append(tok)
+                current_lbls.append(lbl)
+        if len(current_toks) > 0:
+            assert len(current_toks) == len(current_lbls)
+            ret.append((current_toks, current_lbls))
+
     return ret
+
+
 
 def test_read_conll():
     input_ = [
