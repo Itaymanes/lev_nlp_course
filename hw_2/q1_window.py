@@ -15,10 +15,10 @@ from datetime import datetime
 
 import tensorflow as tf
 
-from util import print_sentence, write_conll
-from data_util import load_and_preprocess_data, load_embeddings, read_conll, ModelHelper
-from ner_model import NERModel
-from defs import LBLS
+from .util import print_sentence, write_conll
+from .data_util import load_and_preprocess_data, load_embeddings, read_conll, ModelHelper
+from .ner_model import NERModel
+from .defs import LBLS
 #from report import Report
 
 logger = logging.getLogger("hw3.q1")
