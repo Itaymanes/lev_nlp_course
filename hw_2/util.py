@@ -99,18 +99,16 @@ Blackburn	PER
     output_ = output_.getvalue()
     assert output == output_
 
-def load_word_vector_mapping(vocab_fstream, vector_fstream):
+def load_word_vector_mapping(vocab_file, vector_file):
     """
-    Load word vector mapping using @vocab_fstream, @vector_fstream.
-    Assumes each line of the vocab file matches with those of the vector
-    file.
+    Load word vector mapping from vocab and vector files.
     """
     ret = OrderedDict()
-    for vocab, vector in zip(vocab_fstream, vector_fstream):
-        vocab = vocab.strip()
-        vector = vector.strip()
-        ret[vocab] = array(list(map(float, vector.split())))
-
+    with open(vocab_file, 'r') as vocab_fstream, open(vector_file, 'r') as vector_fstream:
+        for vocab, vector in zip(vocab_fstream, vector_fstream):
+            vocab = vocab.strip()
+            vector = vector.strip()
+            ret[vocab] = array(list(map(float, vector.split())))
     return ret
 
 def test_load_word_vector_mapping():
