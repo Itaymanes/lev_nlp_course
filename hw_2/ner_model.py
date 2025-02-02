@@ -27,7 +27,6 @@ class NERModel(nn.Module):
         self.helper = helper
         self.config = config
         self.report = report
-        self.optimizer = AdamW(self.parameters(), lr=self.config.lr)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def preprocess_sequence_data(self, examples):
