@@ -6,6 +6,7 @@ A model for named entity recognition using PyTorch.
 import logging
 import torch
 import torch.nn as nn
+from torch.optim import AdamW
 from typing import List, Tuple, Set
 from .util import ConfusionMatrix, Progbar, minibatches
 from .data_util import get_chunks
@@ -26,6 +27,7 @@ class NERModel(nn.Module):
         self.helper = helper
         self.config = config
         self.report = report
+        self.optimizer = AdamW(self.parameters(), lr=self.config.lr)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def preprocess_sequence_data(self, examples):
