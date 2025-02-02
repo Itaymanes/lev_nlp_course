@@ -1,110 +1,96 @@
-class Model(object):
-    """Abstracts a Tensorflow graph for a learning task.
+import torch
+import torch.nn as nn
 
-    We use various Model classes as usual abstractions to encapsulate tensorflow
-    computational graphs. Each algorithm you will construct in this homework will
-    inherit from a Model object.
+
+class Model(nn.Module):
+    """Abstracts a PyTorch model for a learning task.
+
+    This serves as a base class for implementing various learning algorithms.
+    By inheriting from nn.Module, we get PyTorch's automatic differentiation
+    and GPU support built in.
     """
-    def add_placeholders(self):
-        """Adds placeholder variables to tensorflow computational graph.
 
-        Tensorflow uses placeholder variables to represent locations in a
-        computational graph where data is inserted.  These placeholders are used as
-        inputs by the rest of the model building and will be fed data during
-        training.
+    def __init__(self):
+        super(Model, self).__init__()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        See for more information:
-        https://www.tensorflow.org/versions/r0.7/api_docs/python/io_ops.html#placeholders
+    def build(self):
+        """Initialize the model architecture.
+
+        Note: Unlike TensorFlow, PyTorch models typically define their architecture
+        in __init__ rather than needing a separate build step. This method is kept
+        for compatibility with existing code structure but should generally be empty
+        or removed in favor of proper __init__ implementation.
         """
-        raise NotImplementedError("Each Model must re-implement this method.")
+        pass
 
-    def create_feed_dict(self, inputs_batch, labels_batch=None):
-        """Creates the feed_dict for one step of training.
+    def add_prediction_op(self, x):
+        """Implements the core of the model that transforms input data into predictions.
 
-        A feed_dict takes the form of:
-        feed_dict = {
-                <placeholder>: <tensor of values to be passed for placeholder>,
-                ....
-        }
+        This method should be implemented in the forward() method of subclasses.
 
-        If labels_batch is None, then no labels are added to feed_dict.
-
-        Hint: The keys for the feed_dict should be a subset of the placeholder
-                    tensors created in add_placeholders.
         Args:
-            inputs_batch: A batch of input data.
-            labels_batch: A batch of label data.
-        Returns:
-            feed_dict: The feed dictionary mapping from placeholders to values.
-        """
-        raise NotImplementedError("Each Model must re-implement this method.")
-
-    def add_prediction_op(self):
-        """Implements the core of the model that transforms a batch of input data into predictions.
-
+            x: Input tensor of shape (batch_size, n_features)
         Returns:
             pred: A tensor of shape (batch_size, n_classes)
         """
-        raise NotImplementedError("Each Model must re-implement this method.")
+        raise NotImplementedError("Each Model must implement forward() method.")
 
-    def add_loss_op(self, pred):
-        """Adds Ops for the loss function to the computational graph.
+    def add_loss_op(self, pred, labels):
+        """Adds the loss function.
 
         Args:
             pred: A tensor of shape (batch_size, n_classes)
+            labels: A tensor of shape (batch_size, n_classes)
         Returns:
-            loss: A 0-d tensor (scalar) output
+            loss: A scalar tensor
         """
         raise NotImplementedError("Each Model must re-implement this method.")
 
-    def add_training_op(self, loss):
-        """Sets up the training Ops.
-
-        Creates an optimizer and applies the gradients to all trainable variables.
-        The Op returned by this function is what must be passed to the
-        sess.run() to train the model. See
-
-        https://www.tensorflow.org/versions/r0.7/api_docs/python/train.html#Optimizer
-
-        for more information.
+    def forward(self, x):
+        """Forward pass of the model.
 
         Args:
-            loss: Loss tensor (a scalar).
+            x: Input tensor of shape (batch_size, n_features)
         Returns:
-            train_op: The Op for training.
+            pred: A tensor of shape (batch_size, n_classes)
         """
+        return self.add_prediction_op(x)
 
-        raise NotImplementedError("Each Model must re-implement this method.")
-
-    def train_on_batch(self, sess, inputs_batch, labels_batch):
+    def train_on_batch(self, inputs_batch, labels_batch):
         """Perform one step of gradient descent on the provided batch of data.
 
         Args:
-            sess: tf.Session()
-            input_batch: np.ndarray of shape (n_samples, n_features)
-            labels_batch: np.ndarray of shape (n_samples, n_classes)
+            inputs_batch: tensor of shape (n_samples, n_features)
+            labels_batch: tensor of shape (n_samples, n_classes)
         Returns:
             loss: loss over the batch (a scalar)
         """
-        feed = self.create_feed_dict(inputs_batch, labels_batch=labels_batch)
-        _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
+        self.train()  # Set model to training mode
+        inputs = torch.tensor(inputs_batch, device=self.device)
+        labels = torch.tensor(labels_batch, device=self.device)
+
+        # Forward pass
+        predictions = self.forward(inputs)
+        loss = self.add_loss_op(predictions, labels)
+
         return loss
 
-    def predict_on_batch(self, sess, inputs_batch):
+    def predict_on_batch(self, inputs_batch):
         """Make predictions for the provided batch of data
 
         Args:
-            sess: tf.Session()
-            input_batch: np.ndarray of shape (n_samples, n_features)
+            inputs_batch: tensor or numpy array of shape (n_samples, n_features)
         Returns:
-            predictions: np.ndarray of shape (n_samples, n_classes)
+            predictions: tensor of shape (n_samples, n_classes)
         """
-        feed = self.create_feed_dict(inputs_batch)
-        predictions = sess.run(self.pred, feed_dict=feed)
+        self.eval()  # Set model to evaluation mode
+        with torch.no_grad():
+            inputs = torch.tensor(inputs_batch, device=self.device)
+            predictions = self.forward(inputs)
         return predictions
 
-    def build(self):
-        self.add_placeholders()
-        self.pred = self.add_prediction_op()
-        self.loss = self.add_loss_op(self.pred)
-        self.train_op = self.add_training_op(self.loss)
+    # The following TensorFlow-specific methods are removed as they're not needed in PyTorch:
+    # - add_placeholders()
+    # - create_feed_dict()
+    # - add_training_op()
