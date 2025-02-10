@@ -177,7 +177,18 @@ class ModelHelper:
         return cls(tok2id, max_length)
 
 
-def load_and_preprocess_data(args):
+def load_and_preprocess_data():
+    class Args:
+        def __init__(self):
+            self.data_train = "lev_nlp_course/hw_2/data/tiny.conll"
+            self.data_dev = "lev_nlp_course/hw_2/data/tiny.conll"
+            self.vocab = "lev_nlp_course/hw_2/data/vocab.txt"
+            self.vectors = "lev_nlp_course/hw_2/data/wordVectors.txt"
+
+        def parse_args(self):
+            return self
+    args = Args()
+    args = args.parse_args()
     """Load and preprocess data for training"""
     logger.info("Loading training data...")
     train = read_conll(args.data_train)
