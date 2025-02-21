@@ -18,7 +18,6 @@ def read_conll(file_path):
     @tokens and @labels are lists of strings.
     """
     ret = []
-
     current_toks, current_lbls = [], []
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -29,16 +28,22 @@ def read_conll(file_path):
                     ret.append((current_toks, current_lbls))
                 current_toks, current_lbls = [], []
             else:
-                assert "\t" in line, f"Invalid CONLL format; expected a '\\t' in {line}"
-                tok, lbl = line.split("\t")
+                parts = line.split()
+                if len(parts) == 2:
+                    tok, lbl = parts
+                elif len(parts) == 4:
+                    tok, _, _, lbl = parts
+                else:
+                  assert False, f"Invalid CONLL format; unexpected number of parts: {line}"
+
                 current_toks.append(tok)
+                if lbl != "O":
+                    lbl = lbl.split('-')[1] if '-' in lbl else lbl # Extract BIO tag
                 current_lbls.append(lbl)
         if len(current_toks) > 0:
             assert len(current_toks) == len(current_lbls)
             ret.append((current_toks, current_lbls))
-
     return ret
-
 
 
 def test_read_conll():
