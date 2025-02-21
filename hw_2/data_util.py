@@ -177,11 +177,12 @@ class ModelHelper:
         return cls(tok2id, max_length)
 
 
-def load_and_preprocess_data():
+def load_and_preprocess_data(with_test=False):
     class Args:
         def __init__(self):
             self.data_train = "lev_nlp_course/hw_2/data/tiny.conll"
             self.data_dev = "lev_nlp_course/hw_2/data/tiny.conll"
+            self.data_test = "lev_nlp_course/hw_2/data/test.masked"
             self.vocab = "lev_nlp_course/hw_2/data/vocab.txt"
             self.vectors = "lev_nlp_course/hw_2/data/wordVectors.txt"
 
@@ -202,7 +203,14 @@ def load_and_preprocess_data():
     train_data = helper.vectorize(train)
     dev_data = helper.vectorize(dev)
 
-    return helper, train_data, dev_data, train, dev
+    if with_test:
+        logger.info("Loading test data...")
+        test = read_conll(args.data_test)
+        logger.info("Done. Read %d sentences", len(test))
+        test_data = helper.vectorize(test)
+        return helper, train_data, dev_data, test_data, train, dev, test
+    else:
+        return helper, train_data, dev_data, train, dev
 
 
 def load_embeddings(args, helper: ModelHelper) -> torch.Tensor:
