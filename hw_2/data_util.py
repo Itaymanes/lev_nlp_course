@@ -182,7 +182,7 @@ def load_and_preprocess_data(with_test=False):
         def __init__(self):
             self.data_train = "lev_nlp_course/hw_2/data/tiny.conll"
             self.data_dev = "lev_nlp_course/hw_2/data/tiny.conll"
-            self.data_test = "lev_nlp_course/hw_2/data/test.masked"
+            self.data_test = "lev_nlp_course/hw_2/data/test.conll"
             self.vocab = "lev_nlp_course/hw_2/data/vocab.txt"
             self.vectors = "lev_nlp_course/hw_2/data/wordVectors.txt"
 
