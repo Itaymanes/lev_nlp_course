@@ -111,6 +111,10 @@ def train_model(model: nn.Module,
             # Training step
             optimizer.zero_grad()
             logits = model(batch_inputs)
+
+            # todo: check
+            batch_labels = batch_labels.view(-1)  # Reshape to [batch_size * max_length]
+
             loss_batch = model.criterion(logits, batch_labels)
 
             loss_batch.backward()
