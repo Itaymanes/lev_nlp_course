@@ -64,6 +64,70 @@ def evaluate_model(model: nn.Module, data: List[Tuple], batch_size: int, device:
 
     return accuracy, macro_f1, per_class_f1
 
+def evaluate_model_rnn(model: nn.Module, data: List[Tuple], batch_size: int, device: str) -> Tuple[float, float, List[float]]:
+    """
+    Evaluate the model on the provided data.
+
+    Args:
+        model: The trained model.
+        data: List of tuples (input, label). For sequence tagging, each label should be a list.
+        batch_size: Batch size for evaluation.
+        device: Device to run the evaluation on.
+
+    Returns:
+        Tuple of (accuracy, macro_f1, per_class_f1_scores)
+    """
+    model.eval()
+    all_predictions = []
+    all_labels = []
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for batch_start in range(0, len(data), batch_size):
+            batch_end = batch_start + batch_size
+            batch_inputs = torch.LongTensor([data[i][0] for i in range(batch_start, min(batch_end, len(data)))]).to(device)
+            batch_labels = torch.LongTensor([data[i][1] for i in range(batch_start, min(batch_end, len(data)))]).to(device)
+
+            outputs = model(batch_inputs)
+
+            # If the outputs are 2D, reshape them to 3D.
+            # We assume that batch_inputs has shape [batch_size, max_length] (or equivalent),
+            # so we reshape outputs to [batch_size, max_length, n_classes].
+            if outputs.dim() == 2 and batch_inputs.dim() == 2:
+                outputs = outputs.view(batch_inputs.size(0), batch_inputs.size(1), -1)
+
+            # Now, handle both classification and sequence tagging cases.
+            if outputs.dim() == 2:
+                # Classification case: outputs shape [batch_size, n_classes]
+                predictions = torch.argmax(outputs, dim=1)  # shape: [batch_size]
+                if batch_labels.dim() == 2:
+                    batch_labels = batch_labels.squeeze(1)
+            elif outputs.dim() == 3:
+                # Sequence tagging case: outputs shape [batch_size, max_length, n_classes]
+                predictions = torch.argmax(outputs, dim=2)  # shape: [batch_size, max_length]
+                # Ensure batch_labels is 2D (i.e. [batch_size, max_length])
+                if batch_labels.dim() == 1:
+                    batch_labels = batch_labels.unsqueeze(1)
+                # If predictions and labels have different sequence lengths, slice predictions to match labels
+                if predictions.size(1) != batch_labels.size(1):
+                    predictions = predictions[:, :batch_labels.size(1)]
+            else:
+                raise ValueError(f"Unexpected output dimensions: {outputs.shape}")
+
+
+            batch_labels = batch_labels.view(-1)  # Reshape to [batch_size * max_length]
+
+            correct += (predictions == batch_labels).sum().item()
+            total += batch_labels.numel()
+
+            all_predictions.extend(predictions.cpu().numpy().flatten())
+            all_labels.extend(batch_labels.cpu().numpy().flatten())
+
+    accuracy = correct / total
+    macro_f1, per_class_f1 = compute_f1(np.array(all_predictions), np.array(all_labels), model.config.n_classes)
+    return accuracy, macro_f1, per_class_f1
+
 
 def train_model(model: nn.Module,
                 train_data: List[Tuple],
@@ -246,7 +310,7 @@ def train_model_rnn(model: nn.Module,
         print(f"train_macro_f1: {train_macro_f1}")
         print(f"train_per_class_f1: {train_per_class_f1}")
         # Evaluation
-        dev_acc, dev_macro_f1, dev_per_class_f1 = evaluate_model(
+        dev_acc, dev_macro_f1, dev_per_class_f1 = evaluate_model_rnn(
             model, dev_data, config.batch_size, model.device
         )
 
