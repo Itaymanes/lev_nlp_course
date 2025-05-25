@@ -167,50 +167,58 @@ def train(args, model):
     optimizer = AdamW(model.parameters(), lr=lr)
     best_dev_acc = 0
 
-    ## run for the specified number of epochs
-    for epoch in range(args.epochs):
-        model.train()
-        train_loss = 0
-        num_batches = 0
-        for step, batch in enumerate(tqdm(train_dataloader, desc=f'train-{epoch}', disable=TQDM_DISABLE)):
-            b_ids, b_type_ids, b_mask, b_labels, b_sents = batch[0]['token_ids'], batch[0]['token_type_ids'], batch[0][
-                'attention_mask'], batch[0]['labels'], batch[0]['sents']
+    log_filepath = args.filepath + ".log.txt"
+    with open(log_filepath, "w") as log_file:
+        log_file.write("epoch\ttrain_loss\ttrain_acc\ttrain_f1\tdev_acc\tdev_f1\n")
 
-            b_ids = b_ids.to(device)
-            b_mask = b_mask.to(device)
-            b_labels = b_labels.to(device)
+        ## run for the specified number of epochs
+        for epoch in range(args.epochs):
+            model.train()
+            train_loss = 0
+            num_batches = 0
+            for step, batch in enumerate(tqdm(train_dataloader, desc=f'train-{epoch}', disable=TQDM_DISABLE)):
+                b_ids, b_type_ids, b_mask, b_labels, b_sents = batch[0]['token_ids'], batch[0]['token_type_ids'], batch[0][
+                    'attention_mask'], batch[0]['labels'], batch[0]['sents']
 
-            optimizer.zero_grad()
-            logits = model(b_ids, b_mask)
-            loss = F.nll_loss(logits, b_labels.view(-1), reduction='sum') / args.batch_size
+                b_ids = b_ids.to(device)
+                b_mask = b_mask.to(device)
+                b_labels = b_labels.to(device)
 
-            loss.backward()
-            optimizer.step()
+                optimizer.zero_grad()
+                logits = model(b_ids, b_mask)
+                loss = F.nll_loss(logits, b_labels.view(-1), reduction='sum') / args.batch_size
 
-            train_loss += loss.item()
-            num_batches += 1
+                loss.backward()
+                optimizer.step()
 
-        train_loss = train_loss / (num_batches)
+                train_loss += loss.item()
+                num_batches += 1
 
-        train_acc, train_f1, *_ = model_eval(train_dataloader, model, device)
-        dev_acc, dev_f1, *_ = model_eval(dev_dataloader, model, device)
+            train_loss = train_loss / (num_batches)
 
-        if dev_acc > best_dev_acc:
-            best_dev_acc = dev_acc
-            save_model(model, optimizer, args, config, args.filepath)
+            train_acc, train_f1, *_ = model_eval(train_dataloader, model, device)
+            dev_acc, dev_f1, *_ = model_eval(dev_dataloader, model, device)
 
-        print(f"epoch {epoch}: train loss :: {train_loss :.3f}, train acc :: {train_acc :.3f}, dev acc :: {dev_acc :.3f}")
+            if dev_acc > best_dev_acc:
+                best_dev_acc = dev_acc
+                save_model(model, optimizer, args, config, args.filepath)
 
+            print(f"epoch {epoch}: train loss :: {train_loss :.3f}, train acc :: {train_acc :.3f}, dev acc :: {dev_acc :.3f}")
+
+            ### Save log to file
+            log_file.write(f"{epoch}\t{train_loss:.4f}\t{train_acc:.4f}\t{train_f1:.4f}\t{dev_acc:.4f}\t{dev_f1:.4f}\n")
+            log_file.flush()  # Ensure data is written after each epoch
 
 def test(args, model):
     with torch.no_grad():
         device = torch.device('cuda') if args.use_gpu else torch.device('cpu')
-        saved = torch.load(args.filepath)
+        saved = torch.load(args.filepath, weights_only=False)
         # config = saved['model_config']
         # model = BertSentClassifier(config)
         model.load_state_dict(saved['model'])
         model = model.to(device)
         print(f"load model from {args.filepath}")
+        print(f"training option: {args.option}")
         dev_data = create_data(args.dev, 'valid')
         dev_dataset = BertDataset(dev_data, args)
         dev_dataloader = DataLoader(dev_dataset, shuffle=False, batch_size=args.batch_size, collate_fn=dev_dataset.collate_fn)
